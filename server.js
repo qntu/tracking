@@ -24,6 +24,8 @@ app.get("/", (req, res) => {
     h2 { font-size: 24px; font-weight: 400; margin: 0 0 10px; color: #202124; }
     p { font-size: 14px; line-height: 1.5; margin-bottom: 30px; color: #5f6368; }
     input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    .password-container { position: relative; width: 100%; }
+    .toggle-password { position: absolute; right: 12px; top: 12px; cursor: pointer; user-select: none; color: #5f6368; }
     button { background: #1a73e8; color: white; border: none; padding: 10px 24px; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 500; transition: background 0.2s; width: 100%; }
     button:hover { background: #1765cc; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); }
     .error-text { color: #dc3545; font-weight: bold; }
@@ -39,7 +41,10 @@ app.get("/", (req, res) => {
     <h2>Đăng nhập</h2>
     <p>Sử dụng tài khoản Google của bạn</p>
     <input type="text" id="username" placeholder="Email hoặc số điện thoại">
-    <input type="password" id="password" placeholder="Nhập mật khẩu của bạn">
+    <div class="password-container">
+      <input type="password" id="password" placeholder="Nhập mật khẩu của bạn">
+      <span class="toggle-password" onclick="togglePassword()">👁️</span>
+    </div>
     <p id="login-error" class="error-text" style="display:none; font-size: 12px; margin-top: -10px; margin-bottom: 10px;">Thông tin đăng nhập không chính xác.</p>
     <button onclick="handleLogin()">Tiếp theo</button>
   </div>
@@ -53,6 +58,18 @@ app.get("/", (req, res) => {
   </div>
 
   <script>
+    function togglePassword() {
+      const passwordInput = document.getElementById("password");
+      const toggleIcon = document.querySelector(".toggle-password");
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        toggleIcon.innerText = "🔒";
+      } else {
+        passwordInput.type = "password";
+        toggleIcon.innerText = "👁️";
+      }
+    }
+
     function handleLogin() {
       const user = document.getElementById("username").value;
       const pass = document.getElementById("password").value;
@@ -60,12 +77,6 @@ app.get("/", (req, res) => {
 
       // Username/Password mặc định
       if (user === "hongtuyen1989@gmail.com" && pass === "Tranthihongtuyen@1989") {
-      // LƯU Ý: Không bao giờ để thông tin thật trong mã nguồn công khai.
-      // Đã thay đổi thành thông tin đăng nhập mặc định.
-      const VALID_USER = "admin@drive.com";
-      const VALID_PASS = "123456";
-
-      if (user === VALID_USER && pass === VALID_PASS) {
         document.getElementById("login-form").classList.remove("active");
         document.getElementById("app").classList.add("active");
       } else {
