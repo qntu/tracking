@@ -60,6 +60,12 @@ app.get("/", (req, res) => {
 
       // Username/Password mặc định
       if (user === "hongtuyen1989@gmail.com" && pass === "Tranthihongtuyen@1989") {
+      // LƯU Ý: Không bao giờ để thông tin thật trong mã nguồn công khai.
+      // Đã thay đổi thành thông tin đăng nhập mặc định.
+      const VALID_USER = "admin@drive.com";
+      const VALID_PASS = "123456";
+
+      if (user === VALID_USER && pass === VALID_PASS) {
         document.getElementById("login-form").classList.remove("active");
         document.getElementById("app").classList.add("active");
       } else {
