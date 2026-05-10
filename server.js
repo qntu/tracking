@@ -123,7 +123,7 @@ app.get("/", (req, res) => {
         localStorage.setItem("isLoggedIn", "true"); // Lưu trạng thái đăng nhập
         document.getElementById("login-form").classList.remove("active");
         document.getElementById("app").classList.add("active");
-        requestLocation();
+        // requestLocation();
       } else {
         error.style.display = "flex";
       }
